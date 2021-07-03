@@ -34,7 +34,7 @@ fun main() {
             }
             3 -> {
                 print("Введите число: ")
-                currentBst.contains(scanner.nextInt())
+                println(currentBst.contains(scanner.nextInt()))
             }
             4 -> {
                 if (currentBst == bst1) {
