@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Route Builder</string>
+    <string name="selectCountryButtonText">Start</string>
+    <string name="centerTextView">Hello</string>
+</resources>

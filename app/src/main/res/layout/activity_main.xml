@@ -1,0 +1,91 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:layout_gravity="bottom">
+
+    <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+        <TextView
+                android:id="@+id/centerTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/gray"
+                android:gravity="center"
+                android:text="@string/centerTextView"
+                android:textAppearance="@android:style/TextAppearance.Material.Display1"/>
+    </ScrollView>
+
+    <LinearLayout
+            android:id="@+id/buttonsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        <Spinner
+                android:id="@+id/selectCountrySpinner"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/pink"
+                android:text="@string/selectCountryButtonText"
+                android:theme="@style/MaterialAlertDialog.MaterialComponents.Title.Text.CenterStacked"/>
+
+        <View
+                android:layout_width="1sp"
+                android:layout_height="match_parent"
+                android:background="@color/gray"
+        />
+
+        <Button
+                android:id="@+id/previousStepButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:background="@color/teal_200"
+                android:onClick="onClickPreviousStepButton"
+                android:text="Prev step"
+        />
+
+        <View
+                android:layout_width="1sp"
+                android:layout_height="match_parent"
+                android:background="@color/gray"
+        />
+
+        <Button
+                android:id="@+id/nextStepButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:background="@color/pink"
+                android:onClick="onClickNextStepButton"
+                android:text="Next step"
+        />
+
+        <View
+                android:layout_width="1sp"
+                android:layout_height="match_parent"
+                android:background="@color/gray"
+        />
+
+        <Button
+                android:id="@+id/startButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:enabled="true"
+                android:background="@color/pink"
+                android:onClick="onClickStartButton"
+                android:text="Start"
+        />
+
+    </LinearLayout>
+
+</LinearLayout>
