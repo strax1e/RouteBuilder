@@ -2,30 +2,28 @@ package com.gvm.routebuilder.antalgorithm
 
 /**
  * Base class of edge.
- * @param[nodes] nodes that connected by this edge
- * @param[cost] the value that this edge contains
+ * @param[nodeA] first node, that connected by this edge
+ * @param[nodeB] second node, that connected by this edge
+ * @param[cost] the value this edge contains
  */
-open class Edge(val nodes: Pair<Short, Short>, val cost: Short) {
+open class Edge(val nodeA: Short, val nodeB: Short, val cost: Short) {
 
     /**
-     * Сompares, taking into account the equality of paths A -> B and B -> A
+     * Compares, taking into account the equality of paths A -> B and B -> A
      */
     override fun equals(other: Any?): Boolean {
-        if (other == null || this.javaClass != other.javaClass) return false
-
-        val otherAsEdge = other as Edge
-        val isNodesEquals = this.nodes == otherAsEdge.nodes ||
-                (this.nodes.first == otherAsEdge.nodes.second && this.nodes.second == otherAsEdge.nodes.first)
-
-        return isNodesEquals && this.cost == otherAsEdge.cost
+        if (other == null || other !is Edge) return false
+        val isNodesEquals = (this.nodeA == other.nodeA && this.nodeB == other.nodeB) ||
+                (this.nodeA == other.nodeB && this.nodeB == other.nodeA)
+        return isNodesEquals && this.cost == other.cost
     }
 
     /**
      * Generates hash code, taking into account the equality of paths A -> B and B -> A
      */
     override fun hashCode(): Int {
-        var result = nodes.first * nodes.second
-        result = 31 * result + cost
+        var result = (this.nodeA + 1) * (this.nodeB + 1)
+        result = 31 * result + this.cost
         return result
     }
 }
