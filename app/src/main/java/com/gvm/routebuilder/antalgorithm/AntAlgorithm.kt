@@ -3,6 +3,6 @@ package com.gvm.routebuilder.antalgorithm
 /**
  *
  */
-fun getPathAndStates(edges: Collection<Edge>) {
+fun getPathAndStates(start: Short, destination: Short, edges: Collection<Edge>) {
    TODO()
 }
