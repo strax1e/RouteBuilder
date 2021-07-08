@@ -27,7 +27,7 @@ fun getPathAndStates(
     val verticesAmount = getVerticesAmount(edges)
     val iterationAmount = 10
 
-    /** adjacencyList&#91;nodeA&#93;&#91;nodeB&#93; = Pair<pheromones, 1/dist>*/
+    // adjacencyList[nodeA][nodeB] = Pair<pheromones, 1/dist>
     val adjacencyList = adjacencyListOfEdges(edges, verticesAmount)
     val addingPheromones = Array<HashMap<Short, Float>>(verticesAmount) { hashMapOf() }
     val states = mutableListOf(getState(adjacencyList))
