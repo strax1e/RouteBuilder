@@ -32,7 +32,6 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@color/pink"
-                android:text="@string/selectCountryButtonText"
                 android:theme="@style/MaterialAlertDialog.MaterialComponents.Title.Text.CenterStacked"/>
 
         <View
