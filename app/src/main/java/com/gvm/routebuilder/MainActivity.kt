@@ -25,6 +25,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Actions that occur when the focus of the window is changed
+     */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus)
+            hideSystemUI()
+    }
+
+    /**
+     * Hide navigation bar
+     */
+    private fun hideSystemUI() {
+        window.decorView.systemUiVisibility = (
+                 View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION)
+    }
+
+    /**
      * This is the action that is called when the "previous step" button is pressed
      */
     fun onClickPreviousStepButton(view: View) {
