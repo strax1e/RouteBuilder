@@ -2,8 +2,6 @@
 
 ## Летняя практика 2021 (после 2 курса).
 
---- 
-
 Название команды: *GVM.*
 
 Тема: *приложение на Android, с возможностью построить оптимизированный путь от одного города к другому внутри выбранной страны.*
@@ -22,3 +20,5 @@
 ---
 
 ### План работы, naming convention и ТЗ представлены [здесь](https://docs.google.com/spreadsheets/d/1AwgFWDgLDrHfQzcycRXwydDjmrvT08ZzIQRBoe7vwsA/edit?usp=sharing).
+
+### Репозиторий kotlin сервера, что используется внутри приложения для обращений к отдаленной БД, находится [здесь](https://github.com/strax1e/RouteBuilderServer).
