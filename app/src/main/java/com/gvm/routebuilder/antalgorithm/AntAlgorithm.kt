@@ -7,11 +7,14 @@ import kotlin.math.pow
 import kotlin.random.Random
 
 //constants
-const val startingPheromones = 0.5f
+const val startingPheromones = 0.1f
 const val pheromonesResidue = 0.64f
 const val pheromonesInference = 1
 const val distanceInfluence = 1
+const val iterationAmount = 10
 const val antAmount = 50
+const val pheromonesDistCf = 2f
+const val antRankRaise = 0.8f
 
 /**
  * @param[start] starting point
@@ -25,33 +28,31 @@ fun getPathAndStates(
     edges: Collection<Edge>
 ): Pair<Collection<Pair<Short, Short>>?, Collection<Collection<Triple<Short, Short, Float>>>> {
     val verticesAmount = getVerticesAmount(edges)
-    val iterationAmount = 10
 
     // adjacencyList[nodeA][nodeB] = Pair<pheromones, 1/dist>
     val adjacencyList = adjacencyListOfEdges(edges, verticesAmount)
     val addingPheromones = Array<HashMap<Short, Float>>(verticesAmount) { hashMapOf() }
     val states = mutableListOf(getState(adjacencyList))
-
     for (iterationNumber in 0 until iterationAmount) {
         antsLoop@ for (antNumber in 0 until antAmount) {
             val visited = hashSetOf(start) // nodes, visited by the ant
-            val path = mutableListOf(start) // current ant's path.
+            val curAntPath = mutableListOf(start) // current ant's path.
             var distance = 0f // summary distance of the way
             var curPos = start
-            while (path.last() != destination) {
+            while (curAntPath.last() != destination) {
                 val nextPos = getNextStep(curPos, visited, adjacencyList) ?: continue@antsLoop
                 distance += 1 / adjacencyList[curPos.toInt()][nextPos]!!.second
                 visited.add(nextPos)
-                path.add(nextPos)
+                curAntPath.add(nextPos)
                 curPos = nextPos
             }
-            addPheromones(addingPheromones, path, distance)
+            addPheromones(addingPheromones, curAntPath, distance)
         }
         updatePheromones(adjacencyList, addingPheromones)
         states.add(getState(adjacencyList))
     }
-    val path = getBestPath(adjacencyList, start, destination)
-    return Pair(edgeListOfPath(path), states)
+    val bestPath = getBestPath(adjacencyList, start, destination)
+    return Pair(edgeListOfPath(bestPath), states)
 }
 
 /**
@@ -109,7 +110,7 @@ fun getNextStep(
 fun getVerticesAmount(edges: Collection<Edge>): Int {
     var number: Short = -1
     edges.forEach {
-        number = maxOf(number, it.nodeA)
+        number = maxOf(number, it.nodeA, it.nodeB)
     }
     return number + 1
 }
@@ -142,7 +143,8 @@ fun updatePheromones(
     for (i in adjacencyList.indices) {
         for (j in adjacencyList[i].keys) {
             val oldV = adjacencyList[i][j]
-            adjacencyList[i][j] = oldV!!.copy(oldV.first * pheromonesResidue + (addingPheromones[i][j] ?: 0f))
+            adjacencyList[i][j] =
+                oldV!!.copy(oldV.first * pheromonesResidue + pheromonesDistCf * (addingPheromones[i][j] ?: 0f))
         }
     }
 }
@@ -157,7 +159,8 @@ fun updatePheromones(
 fun addPheromones(addingPheromones: Array<HashMap<Short, Float>>, path: MutableList<Short>, distance: Float): Unit {
     val edgeList = edgeListOfPath(path) ?: return
     for (i in edgeList)
-        addingPheromones[i.first.toInt()][i.second] = 1 / distance + (addingPheromones[i.first.toInt()][i.second] ?: 0f)
+        addingPheromones[i.first.toInt()][i.second] =
+            (1 / distance).pow(antRankRaise) + (addingPheromones[i.first.toInt()][i.second] ?: 0f)
 }
 
 /**
@@ -218,8 +221,8 @@ fun getBestPath(
         var desiredNode: Short = 0
         for (i in possibleWays) {
             val curDesire = i.second.pow(pheromonesInference) * i.third.pow(distanceInfluence)
-            if (curDesire > maxDesire){
-                maxDesire=curDesire
+            if (curDesire > maxDesire) {
+                maxDesire = curDesire
                 desiredNode = i.first
             }
         }
