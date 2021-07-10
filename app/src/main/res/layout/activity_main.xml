@@ -16,7 +16,7 @@
                 android:layout_height="wrap_content"
                 android:background="@color/gray"
                 android:gravity="center"
-                android:text="@string/centerTextView"
+                android:text="@string/selectCountryText"
                 android:textAppearance="@android:style/TextAppearance.Material.Display1"/>
     </ScrollView>
 
@@ -48,7 +48,7 @@
                 android:enabled="false"
                 android:background="@color/teal_200"
                 android:onClick="onClickPreviousStepButton"
-                android:text="Prev step"
+                android:text="@string/prevStepText"
         />
 
         <View
@@ -65,7 +65,7 @@
                 android:enabled="false"
                 android:background="@color/pink"
                 android:onClick="onClickNextStepButton"
-                android:text="Next step"
+                android:text="@string/nextStepText"
         />
 
         <View
@@ -82,7 +82,7 @@
                 android:enabled="false"
                 android:background="@color/pink"
                 android:onClick="onClickStartButton"
-                android:text="Start"
+                android:text="@string/startText"
         />
 
     </LinearLayout>

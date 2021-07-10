@@ -1,5 +1,11 @@
 <resources>
     <string name="app_name">Route Builder</string>
     <string name="selectCountryButtonText">Start</string>
-    <string name="centerTextView">Select a country</string>
+    <string name="selectCountryText">Select a country</string>
+    <string name="prevStepText">Prev Step</string>
+    <string name="nextStepText">Next Step</string>
+    <string name="stopText">Stop</string>
+    <string name="startText">Start</string>
+    <string name="noneText">None</string>
+    <string name="notSelectedText">Not Selected</string>
 </resources>
