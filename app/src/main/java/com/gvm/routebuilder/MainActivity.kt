@@ -1,9 +1,6 @@
 package com.gvm.routebuilder
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -13,7 +10,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.gvm.routebuilder.database.entities.Road
 import com.gvm.routebuilder.viewmodel.MainViewModel
-import kotlin.random.Random
 
 /**
  * MainActivity class makes the main activity of the application work
@@ -29,8 +25,9 @@ class MainActivity : AppCompatActivity() {
 
         this.selectCountrySpinner.isEnabled = false
 
-        this.mainVM.ldCountries.observe(this, this.countriesObserver)
-        this.mainVM.ldTownsAndRoads.observe(this, this.townAndRoadsObserver)
+        this.mainVM.countries.observe(this, this.countriesObserver)
+        this.mainVM.townsAndRoads.observe(this, this.townsRoadsObserver)
+        this.mainVM.graph.observe(this, this.graphObserver)
 
         this.mainVM.loadCountries() // getting countries from db
     }
@@ -87,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         val spinner = this.selectCountrySpinner
 
         val countries = listOf(resources.getString(R.string.noneText)) +
-                this.mainVM.ldCountries.value!!.values.toList()
+                this.mainVM.countries.value!!.values.toList()
         val newAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, countries)
         newAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = newAdapter
@@ -96,12 +93,14 @@ class MainActivity : AppCompatActivity() {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 if (spinner.selectedItem != resources.getString(R.string.noneText)) {
                     val countryId = mainVM.getCountryId(spinner.selectedItem as String)
+                    centerTextView.visibility = TextView.INVISIBLE
+                    progressBar.visibility = ProgressBar.VISIBLE
                     mainVM.loadTownsAndRoads(countryId) // getting towns and roads from db
                 } else {
-                    startButton.isEnabled = false
-                    mainVM.isStopped = true
-                    switchStopStartButton(true)
-                    centerTextView.text = resources.getString(R.string.selectCountryText) // "Select a country"
+                    if (!mainVM.graph.value?.first.isNullOrEmpty()) {
+                        removeGraph()
+                    }
+                    centerTextView.visibility = TextView.VISIBLE
                 }
             }
 
@@ -133,93 +132,62 @@ class MainActivity : AppCompatActivity() {
         this.changeStepButtonsState(!isStart)
     }
 
-    private val mapIdToImageButton = HashMap<Short, ImageButton>()
-
-    private fun createNodes() {
-        val setOfPairXY = HashSet<Pair<Float, Float>>()
-        mainVM.ldTownsAndRoads.value!!.second.forEach {
-
-            val setAttrsButton = fun(button: ImageButton, coordinates: Pair<Float, Float>) {
-                button.apply {
-                    visibility = Button.VISIBLE
-                    x = coordinates.first
-                    y = coordinates.second
-                    setBackgroundResource(R.drawable.roundedbutton)
-                }
-            }
-            var imageView = findViewById<ImageView>(R.id.image)
-            val createButton = fun(node: Short) {
-                var coordinates = Pair<Float, Float>(0f, 0f)
-                if (!mapIdToImageButton.contains(node)) {
-                    do {
-                        coordinates = Pair(Random.nextFloat() * imageView.width, Random.nextFloat() * imageView.height)
-                    } while (setOfPairXY.contains(coordinates))
-                    setOfPairXY.add(coordinates)
-                    val button = ImageButton(this)
-                    setAttrsButton(button, coordinates)
-                    mapIdToImageButton[node] = button
-                }
-            }
-            createButton(it.nodeA)
-            createButton(it.nodeB)
+    /**
+     * Removes graph from display
+     */
+    private fun removeGraph() {
+        for (button in mainVM.graph.value!!.first.values) {
+            this.constraintLayout.removeView(button)
         }
+        this.imageView.setImageBitmap(
+            Bitmap.createBitmap(
+                this.imageView.width,
+                this.imageView.height,
+                Bitmap.Config.ARGB_8888
+            )
+        )
     }
 
-    fun deleteNodes(buttons: Collection<ImageButton>) {
-        val layout = findViewById<ConstraintLayout>(R.id.field)
-        for (button in mapIdToImageButton.values) {
-            layout.removeView(button)
-        }
-    }
+    /**
+     * Displays graph
+     */
+    private fun renderGraph() {
+        this.imageView.setImageBitmap(mainVM.graph.value!!.second)
 
-    private fun renderNodes() {
-        val layout = findViewById<ConstraintLayout>(R.id.field)
         val lp = ConstraintLayout.LayoutParams(
             ConstraintLayout.LayoutParams.WRAP_CONTENT,
             ConstraintLayout.LayoutParams.WRAP_CONTENT
         )
-
-        for (button in mapIdToImageButton.values) {
-            layout.addView(button, lp)
+        for (button in mainVM.graph.value!!.first.values) {
+            this.constraintLayout.addView(button, lp)
         }
-    }
-
-    private fun renderEdges() {
-        var imageView = findViewById<ImageView>(R.id.image)
-        val paint = Paint()
-        val bitmap = Bitmap.createBitmap(imageView.width, imageView.height, Bitmap.Config.ARGB_8888)
-
-        val canvas = Canvas(bitmap)
-
-        paint.apply {
-            color = Color.WHITE
-            strokeWidth = 10f
-        }
-
-        mainVM.ldTownsAndRoads.value!!.second.forEach {
-            val buttonA = mapIdToImageButton[it.nodeA]
-            val buttonB = mapIdToImageButton[it.nodeB]
-            canvas.drawLine(buttonA!!.x, buttonA.y, buttonB!!.x, buttonB.y, paint)
-        }
-
-        imageView.setImageBitmap(bitmap)
     }
 
     // MainViewModel declaration
     private val mainVM by lazy { ViewModelProvider(this).get(MainViewModel::class.java) }
 
-    private val townAndRoadsObserver = Observer<Pair<Map<Short, String>, Collection<Road>>> {
-        createNodes()
-        renderEdges()
-        renderNodes()
-        switchStopStartButton(true)
-        startButton.isEnabled = true
+    private val townsRoadsObserver = Observer<Pair<Map<Short, String>, Collection<Road>>> {
+        val offset = 24
+        this.mainVM.createGraph(
+            Pair(offset, offset),
+            Pair(this.imageView.width - offset, this.imageView.height - offset)
+        )
     }
 
     private val countriesObserver = Observer<Map<Short, String>> {
+        this.progressBar.visibility = ProgressBar.INVISIBLE
+        this.centerTextView.visibility = TextView.VISIBLE
         this.configureSpinner()
     }
 
+    private val graphObserver = Observer<Pair<Map<Short, ImageButton>, Bitmap>> {
+        this.progressBar.visibility = ProgressBar.INVISIBLE
+        this.renderGraph()
+    }
+
+    private val progressBar by lazy { findViewById<ProgressBar>(R.id.progressBar) }
+    private val constraintLayout by lazy { findViewById<ConstraintLayout>(R.id.field) }
+    private val imageView by lazy { findViewById<ImageView>(R.id.image) }
     private val centerTextView by lazy { findViewById<TextView>(R.id.centerTextView) }
     private val nextStepButton by lazy { findViewById<Button>(R.id.nextStepButton) }
     private val prevStepButton by lazy { findViewById<Button>(R.id.previousStepButton) }
