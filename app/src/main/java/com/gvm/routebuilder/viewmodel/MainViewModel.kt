@@ -58,14 +58,50 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * Starts routing
+     */
+    fun route(minXY: Pair<Int, Int>, maxXY: Pair<Int, Int>) {
+        CoroutineScope(Dispatchers.Default).launch {
+            val res = getPathAndStates(
+                startAndDestination.value!!.first,
+                startAndDestination.value!!.second,
+                townsAndRoads.value!!.second
+            )
+            val width = maxXY.first - minXY.first
+            val height = maxXY.second - minXY.second
+
+            val states = ArrayList<Bitmap>()
+            res.second.forEach {
+                states.add(painter.createPheromonesEdges(it, townButtons, width, height))
+            }
+            ldPathAndStates.postValue(
+                Pair(
+                    painter.createEdgesWithPath(
+                        res.first, townsAndRoads.value!!.second,
+                        townButtons, width, height
+                    ), states
+                )
+            )
+        }
+    }
+
+    /**
      * Creates a graph for loaded roads. Invoke only when the last one was loaded
      * @param[minXY] minimal coordinates
      * @param[maxXY] maximum coordinates
      */
     fun createGraph(minXY: Pair<Int, Int>, maxXY: Pair<Int, Int>) {
         CoroutineScope(Dispatchers.Default).launch {
-            val newNodes = createNodes(minXY, maxXY)
-            ldGraph.postValue(Pair(newNodes, createEdges(newNodes, minXY, maxXY)))
+            townButtons = createNodes(minXY, maxXY)
+            ldStartAndDestination.postValue(Pair(0, 0))
+            val width = maxXY.first - minXY.first
+            val height = maxXY.second - minXY.second
+            ldGraph.postValue(
+                Pair(
+                    townButtons,
+                    EdgesPainter.createRawEdges(townsAndRoads.value!!.second, townButtons, width, height)
+                )
+            )
         }
     }
 
@@ -91,8 +127,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
         } while (busyXY.contains(coordinates))
         busyXY.add(coordinates)
-        val button = TownButton(townId, viewModelOwner)
-        button.apply {
+        val button = TownButton(townId, viewModelOwner).apply {
             visibility = Button.VISIBLE
             x = coordinates.first
             y = coordinates.second
@@ -108,94 +143,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @param[maxXY] maximum coordinates
      * @return nodes
      */
-    private fun createNodes(minXY: Pair<Int, Int>, maxXY: Pair<Int, Int>): Map<Short, ImageButton> {
-        val newNodes = HashMap<Short, ImageButton>()
+    private fun createNodes(minXY: Pair<Int, Int>, maxXY: Pair<Int, Int>): Map<Short, TownButton> {
+        val newNodes = HashMap<Short, TownButton>()
         val coordinatesSet = HashSet<Pair<Float, Float>>()
         townsAndRoads.value!!.second.forEach {
             if (!newNodes.contains(it.nodeA)) {
-                newNodes[it.nodeA] = createButton(coordinatesSet, minXY, maxXY)
+                newNodes[it.nodeA] = createButton(it.nodeA, coordinatesSet, minXY, maxXY)
             }
             if (!newNodes.contains(it.nodeB)) {
-                newNodes[it.nodeB] = createButton(coordinatesSet, minXY, maxXY)
+                newNodes[it.nodeB] = createButton(it.nodeB, coordinatesSet, minXY, maxXY)
             }
         }
         return newNodes
-    }
-
-    /**
-     * Creates a edges for loaded roads.
-     * @param[minXY] minimal coordinates
-     * @param[maxXY] maximum coordinates
-     * @return nodes
-     */
-    private fun createEdges(nodes: Map<Short, ImageButton>, minXY: Pair<Int, Int>, maxXY: Pair<Int, Int>): Bitmap {
-        val bitmap =
-            Bitmap.createBitmap(maxXY.first - minXY.first, maxXY.second - minXY.second, Bitmap.Config.ARGB_8888)
-        val paint = Paint()
-        paint.apply {
-            color = viewModelOwner.getColor(R.color.gray_light)
-            strokeWidth = convertDpToPx(2.5f)
-            isAntiAlias = true
-            style = Paint.Style.STROKE
-        }
-
-        val paths = ArrayList<Pair<Path, Short>>()
-        townsAndRoads.value!!.second.forEach {
-            val buttonA = nodes[it.nodeA]
-            val buttonB = nodes[it.nodeB]
-            val offset = convertDpToPx(21f / 2)
-
-            var coordStart = Pair(buttonA!!.x + offset, buttonA.y + offset)
-            var coordDestination = Pair(buttonB!!.x + offset, buttonB.y + offset)
-            if (coordDestination.first < coordStart.first) {
-                coordStart = coordDestination.also { coordDestination = coordStart }
-            }
-
-            val path = Path()
-            path.moveTo(coordStart.first, coordStart.second)
-            path.lineTo(coordDestination.first, coordDestination.second)
-            Canvas(bitmap).drawPath(path, paint)
-
-            paths.add(Pair(path, it.cost))
-        }
-        this.setEdgesText(paths, paint, bitmap)
-
-        return bitmap
-    }
-
-    /**
-     * Set the text for edges.
-     * @param[paths] the paths along which the text draw
-     * @param[paint] the paint used for the text
-     * @param[bitmap] the bitmap used for stored
-     * @return bitmap
-     */
-    private fun setEdgesText(paths: ArrayList<Pair<Path, Short>>, paint: Paint, bitmap: Bitmap): Bitmap {
-        paint.apply {
-            textAlign = Paint.Align.CENTER
-            textSize = convertDpToPx(12f)
-        }
-        paths.forEach {
-            setPaintAttrs(paint, Paint.Style.STROKE, Color.DKGRAY)
-            Canvas(bitmap).drawTextOnPath(it.second.toString(), it.first, 0f, 16f, paint)
-
-            setPaintAttrs(paint, Paint.Style.FILL, Color.WHITE)
-            Canvas(bitmap).drawTextOnPath(it.second.toString(), it.first, 0f, 16f, paint)
-        }
-        return bitmap
-    }
-
-    /**
-     * Set the attributes for the paint.
-     * @param[paint] the paint which is changing
-     * @param[style] style attribute
-     * @param[color] color attribute
-     * @return paint
-     */
-    private fun setPaintAttrs(paint: Paint, style: Paint.Style, color: Int): Paint {
-        paint.style = style
-        paint.color = color
-        return paint
     }
 
     /**
@@ -246,9 +205,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val ldTownsAndRoads = MutableLiveData<Pair<Map<Short, String>, Collection<Road>>>()
     val townsAndRoads: LiveData<Pair<Map<Short, String>, Collection<Road>>> = this.ldTownsAndRoads
 
+    private val ldPathAndStates = MutableLiveData<Pair<Bitmap, Collection<Bitmap>>>()
+    val pathAndEdgesState: LiveData<Pair<Bitmap, Collection<Bitmap>>> = this.ldPathAndStates
+
     private val ldCountries = MutableLiveData<Map<Short, String>>()
     val countries: LiveData<Map<Short, String>> = this.ldCountries
 
+    private lateinit var townButtons: Map<Short, TownButton>
+
+    var indexOfStates = 0
+
+    private val painter = EdgesPainter
+
     private val hostDb = "188.225.75.231"
     private val portDb = 8888
+
+    init {
+        this.painter.convertDpToPx = ::convertDpToPx
+    }
 }

@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
 
         this.mainVM.countries.observe(this, this.countriesObserver)
         this.mainVM.townsAndRoads.observe(this, this.townsRoadsObserver)
+        this.mainVM.pathAndEdgesState.observe(this, this.pathAndEdgesStateObserver)
         this.mainVM.graph.observe(this, this.graphObserver)
         this.mainVM.startAndDestination.observe(this, this.startAndDestinationObserver)
 
@@ -56,14 +57,27 @@ class MainActivity : AppCompatActivity() {
      * This is the action that is called when the "previous step" button is pressed
      */
     fun onClickPreviousStepButton(view: View) {
-//        TODO
+        val states = this.mainVM.pathAndEdgesState.value!!.second
+        if (0 <= --this.mainVM.indexOfStates) {
+            this.imageView.setImageBitmap(states.elementAt(this.mainVM.indexOfStates))
+        } else {
+            view.isEnabled = false
+        }
+        this.nextStepButton.isEnabled = true
     }
 
     /**
      * This is the action that is called when the "next step" button is pressed
      */
     fun onClickNextStepButton(view: View) {
-//        TODO
+        val resultAndStates = this.mainVM.pathAndEdgesState.value!!
+        if (++this.mainVM.indexOfStates < resultAndStates.second.size) {
+            this.imageView.setImageBitmap(resultAndStates.second.elementAt(this.mainVM.indexOfStates))
+        } else {
+            this.imageView.setImageBitmap(resultAndStates.first)
+            view.isEnabled = false
+        }
+        this.prevStepButton.isEnabled = true
     }
 
     /**
@@ -73,8 +87,11 @@ class MainActivity : AppCompatActivity() {
         this.switchStopStartButton(!this.mainVM.isStopped)
         this.mainVM.isStopped = !this.mainVM.isStopped
         this.selectCountrySpinner.isEnabled = this.mainVM.isStopped
-        if (this.mainVM.isStopped) {
-            this.centerTextView.text = resources.getString(R.string.selectCountryText)
+        if (!this.mainVM.isStopped) {
+            this.mainVM.indexOfStates = 0
+            this.progressBar.visibility = ProgressBar.VISIBLE
+            this.mainVM.route(Pair(0, 0), Pair(this.imageView.width, this.imageView.height))
+            this.imageView.setImageBitmap(this.mainVM.graph.value!!.second)
         }
     }
 
@@ -85,7 +102,7 @@ class MainActivity : AppCompatActivity() {
         val context = this
         val spinner = this.selectCountrySpinner
 
-        val countries = listOf(resources.getString(R.string.noneText)) +
+        val countries = listOf(getString(R.string.noneText)) +
                 this.mainVM.countries.value!!.values.toList()
         val newAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, countries)
         newAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -94,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 startButton.isEnabled = false
-                if (spinner.selectedItem != resources.getString(R.string.noneText)) {
+                if (spinner.selectedItem != getString(R.string.noneText)) {
                     val countryId = mainVM.getCountryId(spinner.selectedItem as String)
                     centerTextView.visibility = TextView.INVISIBLE
                     progressBar.visibility = ProgressBar.VISIBLE
@@ -108,19 +125,18 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
-                centerTextView.text = resources.getString(R.string.notSelectedText)
+                centerTextView.text = getString(R.string.notSelectedText)
             }
         }
         spinner.isEnabled = true
     }
 
     /**
-     * Switches the state of "next" and "prev" buttons. (Enables or disables both buttons)
-     * @param[newState] new state of button
+     * Disables the state of "next" and "prev" buttons.
      */
-    private fun changeStepButtonsState(newState: Boolean) {
-        this.prevStepButton.isEnabled = newState
-        this.nextStepButton.isEnabled = newState
+    private fun disableStepButtonsState() {
+        this.prevStepButton.isEnabled = false
+        this.nextStepButton.isEnabled = false
     }
 
     /**
@@ -130,13 +146,12 @@ class MainActivity : AppCompatActivity() {
     private fun switchStopStartButton(isStart: Boolean) {
         startButton.text = when (isStart) {
             true -> {
-                this.changeStepButtonsState(false)
+                this.disableStepButtonsState()
                 this.progressBar.visibility = ProgressBar.INVISIBLE
-                resources.getString(R.string.startText)
+                getString(R.string.startText)
             }
-            else -> resources.getString(R.string.stopText)
+            else -> getString(R.string.stopText)
         }
-        this.changeStepButtonsState(!isStart)
     }
 
     /**
@@ -174,19 +189,25 @@ class MainActivity : AppCompatActivity() {
     private val mainVM by lazy { ViewModelProvider(this).get(MainViewModel::class.java) }
 
     private val townsRoadsObserver = Observer<Pair<Map<Short, String>, Collection<Road>>> {
-        val offset = this.mainVM.convertDpToPx(22f).toInt()
-        this.mainVM.createGraph(
-            Pair(0, 0),
-            Pair(this.imageView.width, this.imageView.height)
-        )
+        if (it.first.isNotEmpty() && !it.second.isEmpty()) {
+            this.mainVM.createGraph(
+                Pair(0, 0),
+                Pair(this.imageView.width, this.imageView.height)
+            )
+        } else {
+            Toast.makeText(this, "Database is unavailable", Toast.LENGTH_LONG).show()
+        }
     }
 
     private val countriesObserver = Observer<Map<Short, String>> {
-        this.progressBar.visibility = ProgressBar.INVISIBLE
-        this.centerTextView.visibility = TextView.VISIBLE
-        this.configureSpinner()
+        if (it.isNotEmpty()){
+            this.progressBar.visibility = ProgressBar.INVISIBLE
+            this.centerTextView.visibility = TextView.VISIBLE
+            this.configureSpinner()
+        } else {
+            Toast.makeText(this, "Database is unavailable", Toast.LENGTH_LONG).show()
+        }
     }
-
 
     private val startAndDestinationObserver = Observer<Pair<Short, Short>> {
         this.startButton.isEnabled = (it.first != 0.toShort() && it.second != 0.toShort())
@@ -195,6 +216,12 @@ class MainActivity : AppCompatActivity() {
     private val graphObserver = Observer<Pair<Map<Short, TownButton>, Bitmap>> {
         this.progressBar.visibility = ProgressBar.INVISIBLE
         this.renderGraph()
+    }
+
+    private val pathAndEdgesStateObserver = Observer<Pair<Bitmap, Collection<Bitmap>>> {
+        this.progressBar.visibility = ProgressBar.INVISIBLE
+        this.nextStepButton.isEnabled = true
+        this.imageView.setImageBitmap(it.second.elementAt(this.mainVM.indexOfStates))
     }
 
     private val progressBar by lazy { findViewById<ProgressBar>(R.id.progressBar) }
