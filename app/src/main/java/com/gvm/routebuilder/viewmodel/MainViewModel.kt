@@ -3,6 +3,7 @@ package com.gvm.routebuilder.viewmodel
 import android.app.Application
 import android.graphics.*
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import androidx.lifecycle.AndroidViewModel
@@ -16,6 +17,8 @@ import com.gvm.routebuilder.database.entities.Road
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.random.Random
 
 /**
@@ -119,19 +122,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         maxXY: Pair<Int, Int>
     ): TownButton {
         var coordinates: Pair<Float, Float>
+        val radiusButton = convertDpToPx(10.5f)
+        var regenerate: Boolean
         do {
+            regenerate = false
             coordinates =
                 Pair(
                     minXY.first + Random.nextFloat() * (maxXY.first - minXY.first - convertDpToPx(23f)),
                     minXY.second + Random.nextFloat() * (maxXY.second - minXY.second - convertDpToPx(23f))
                 )
-        } while (busyXY.contains(coordinates))
+            busyXY.forEach {
+                val d = (abs(it.first - coordinates.first)
+                    .pow(2.0f) + abs(it.second - coordinates.second)
+                    .pow(2.0f)).pow(0.5f)
+                if (d < 6 * radiusButton) {
+                    regenerate = true
+                }
+            }
+        } while (regenerate)
         busyXY.add(coordinates)
+        val townName = ldTownsAndRoads.value!!.first[townId]
+        val townNameSubstr = townName?.substring(0..1) + "\n" + townName?.substring(2..3)
         val button = TownButton(townId, viewModelOwner).apply {
+            text = townNameSubstr
             visibility = Button.VISIBLE
             x = coordinates.first
             y = coordinates.second
             setBackgroundResource(R.drawable.town_button)
+            gravity = Gravity.CENTER_HORIZONTAL
+            textSize = convertDpToPx(2.65f)
         }
         button.setOnClickListener(this.townButtonListener)
         return button
