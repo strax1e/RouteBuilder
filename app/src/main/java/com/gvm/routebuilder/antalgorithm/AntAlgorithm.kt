@@ -30,7 +30,7 @@ fun getPathAndStates(
     start: Short,
     destination: Short,
     edges: Collection<Edge>
-): Pair<Collection<Edge>?, Collection<Collection<Triple<Short, Short, Float>>>> {
+): Pair<Collection<Edge>?, Collection<Collection<Pair<Edge, Float>>>> {
     val verticesAmount = getVerticesAmount(edges)
 
     // adjacencyList[nodeA][nodeB] = Pair<pheromones, 1/dist>
@@ -193,18 +193,32 @@ private fun pairListOfPath(path: MutableList<Short>?): MutableList<Pair<Short, S
     return edgeList
 }
 
+/**
+ * Translates list of Pair<from, to> to list of Edges
+ * @param[pairs] list of Pairs
+ * @param[adjacencyList] contains way data in form: adjList［nodeA］［nodeB］ = <pheromones, 1/dist>
+ * @return List<Edge>? : translated from List<Pair<from, to>>
+ */
 private fun edgeListOfPairs(
     pairs: MutableList<Pair<Short, Short>>?,
     adjacencyList: Array<HashMap<Short, Pair<Float, Float>>>
 ): MutableList<Edge>? {
     val edges = mutableListOf<Edge>()
     pairs ?: return null
-    for (i in pairs) {
-        val cost = (1/adjacencyList[i.first.toInt()][i.second]!!.second).roundToInt()
-        val edge = Edge(i.first, i.second, cost.toShort())
-        edges.add(edge)
-    }
+    for (i in pairs)
+        edges.add(pairToEdge(i, adjacencyList))
     return edges
+}
+
+/**
+ * Translates pair<from, to> to Edge
+ * @param[pair] pair, needs to be converted
+ * @param[adjacencyList] contains way data in form: adjList［nodeA］［nodeB］ = <pheromones, 1/dist>
+ * @return[Edge]
+ */
+private fun pairToEdge(pair: Pair<Short, Short>, adjacencyList: Array<HashMap<Short, Pair<Float, Float>>>) : Edge{
+    val cost = (1 / adjacencyList[pair.first.toInt()][pair.second]!!.second).roundToInt()
+    return Edge(pair.first, pair.second, cost.toShort())
 }
 
 /**
@@ -212,16 +226,16 @@ private fun edgeListOfPairs(
  * @param[adjacencyList] contains way data in form: adjList［nodeA］［nodeB］ = <pheromones, 1/dist>
  * @return List<Triple<nodeA, nodeB, pheromones>> of current iteration
  */
-private fun getState(adjacencyList: Array<HashMap<Short, Pair<Float, Float>>>): MutableList<Triple<Short, Short, Float>> {
-    val state = mutableListOf<Triple<Short, Short, Float>>()
+private fun getState(adjacencyList: Array<HashMap<Short, Pair<Float, Float>>>): MutableList<Pair<Edge, Float>> {
+    val state = mutableListOf<Pair<Edge, Float>>()
     for (i in adjacencyList.indices) {
         for (j in i + 1 until adjacencyList.size) {
             val pheromonesStraight = adjacencyList[i][j.toShort()]?.first ?: 0f
             val pheromonesInverted = adjacencyList[j][i.toShort()]?.first ?: 0f
             if (pheromonesInverted > pheromonesStraight && pheromonesInverted > 0f)
-                state.add(Triple(j.toShort(), i.toShort(), pheromonesInverted))
+                state.add(Pair(pairToEdge(Pair(j.toShort(), i.toShort()), adjacencyList), pheromonesInverted))
             else if (pheromonesStraight > 0f)
-                state.add(Triple(i.toShort(), j.toShort(), pheromonesStraight))
+                state.add(Pair(pairToEdge(Pair(i.toShort(), j.toShort()), adjacencyList), pheromonesStraight))
 
         }
     }
