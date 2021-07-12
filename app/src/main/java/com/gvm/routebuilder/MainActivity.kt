@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         this.mainVM.countries.observe(this, this.countriesObserver)
         this.mainVM.townsAndRoads.observe(this, this.townsRoadsObserver)
         this.mainVM.graph.observe(this, this.graphObserver)
+        this.mainVM.startAndDestination.observe(this, this.startAndDestinationObserver)
 
         this.mainVM.loadCountries() // getting countries from db
     }
@@ -37,8 +38,9 @@ class MainActivity : AppCompatActivity() {
      */
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus)
+        if (hasFocus) {
             hideSystemUI()
+        }
     }
 
     /**
@@ -91,6 +93,7 @@ class MainActivity : AppCompatActivity() {
 
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                startButton.isEnabled = false
                 if (spinner.selectedItem != resources.getString(R.string.noneText)) {
                     val countryId = mainVM.getCountryId(spinner.selectedItem as String)
                     centerTextView.visibility = TextView.INVISIBLE
@@ -126,7 +129,11 @@ class MainActivity : AppCompatActivity() {
      */
     private fun switchStopStartButton(isStart: Boolean) {
         startButton.text = when (isStart) {
-            true -> resources.getString(R.string.startText)
+            true -> {
+                this.changeStepButtonsState(false)
+                this.progressBar.visibility = ProgressBar.INVISIBLE
+                resources.getString(R.string.startText)
+            }
             else -> resources.getString(R.string.stopText)
         }
         this.changeStepButtonsState(!isStart)
@@ -180,7 +187,12 @@ class MainActivity : AppCompatActivity() {
         this.configureSpinner()
     }
 
-    private val graphObserver = Observer<Pair<Map<Short, ImageButton>, Bitmap>> {
+
+    private val startAndDestinationObserver = Observer<Pair<Short, Short>> {
+        this.startButton.isEnabled = (it.first != 0.toShort() && it.second != 0.toShort())
+    }
+
+    private val graphObserver = Observer<Pair<Map<Short, TownButton>, Bitmap>> {
         this.progressBar.visibility = ProgressBar.INVISIBLE
         this.renderGraph()
     }
