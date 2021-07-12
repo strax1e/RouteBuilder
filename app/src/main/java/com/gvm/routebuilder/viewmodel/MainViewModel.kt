@@ -2,7 +2,7 @@ package com.gvm.routebuilder.viewmodel
 
 import android.app.Application
 import android.graphics.*
-import android.view.WindowInsetsAnimation
+import android.util.TypedValue
 import android.widget.Button
 import android.widget.ImageButton
 import androidx.lifecycle.AndroidViewModel
@@ -83,8 +83,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         do {
             coordinates =
                 Pair(
-                    minXY.first + Random.nextFloat() * (maxXY.first - minXY.first - 24),
-                    minXY.second + Random.nextFloat() * (maxXY.second - minXY.second - 24)
+                    minXY.first + Random.nextFloat() * (maxXY.first - minXY.first - convertDpToPx(23f)),
+                    minXY.second + Random.nextFloat() * (maxXY.second - minXY.second - convertDpToPx(23f))
                 )
         } while (busyXY.contains(coordinates))
         busyXY.add(coordinates)
@@ -129,8 +129,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             Bitmap.createBitmap(maxXY.first - minXY.first, maxXY.second - minXY.second, Bitmap.Config.ARGB_8888)
         val paint = Paint()
         paint.apply {
-            color = getApplication<Application?>().getColor(R.color.gray_light)
-            strokeWidth = 6f
+            color = viewModelOwner.getColor(R.color.gray_light)
+            strokeWidth = convertDpToPx(2.5f)
             isAntiAlias = true
             style = Paint.Style.STROKE
         }
@@ -139,7 +139,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         townsAndRoads.value!!.second.forEach {
             val buttonA = nodes[it.nodeA]
             val buttonB = nodes[it.nodeB]
-            val offset = 15f
+            val offset = convertDpToPx(21f / 2)
 
             var coordStart = Pair(buttonA!!.x + offset, buttonA.y + offset)
             var coordDestination = Pair(buttonB!!.x + offset, buttonB.y + offset)
@@ -169,10 +169,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun setEdgesText(paths: ArrayList<Pair<Path, Short>>, paint: Paint, bitmap: Bitmap): Bitmap {
         paint.apply {
             textAlign = Paint.Align.CENTER
-            textSize = 44f
+            textSize = convertDpToPx(12f)
         }
         paths.forEach {
-            setPaintAttrs(paint, Paint.Style.STROKE, Color.BLACK)
+            setPaintAttrs(paint, Paint.Style.STROKE, Color.DKGRAY)
             Canvas(bitmap).drawTextOnPath(it.second.toString(), it.first, 0f, 16f, paint)
 
             setPaintAttrs(paint, Paint.Style.FILL, Color.WHITE)
@@ -193,6 +193,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         paint.color = color
         return paint
     }
+
+    /**
+     * Converting dp to px
+     * @param[dpValue] value in dp
+     * @return value in px
+     */
+    fun convertDpToPx(dpValue: Float): Float {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue, viewModelOwner.resources.displayMetrics)
+    }
+
+    private val viewModelOwner = application
 
     var isStopped = true
 
