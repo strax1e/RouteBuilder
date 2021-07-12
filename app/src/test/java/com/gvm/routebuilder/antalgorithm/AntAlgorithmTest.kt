@@ -21,17 +21,17 @@ class AntAlgorithmTest : TestCase() {
     fun testStartingPoint() {
         var path = getPathAndStates(1, 0, edges).first
         assertNotNull(path)
-        var startPoint = path!!.first().first
+        var startPoint = path!!.first().nodeA
         assertEquals(1, startPoint)
 
         path = getPathAndStates(2, 3, edges).first
         assertNotNull(path)
-        startPoint = path!!.first().first
+        startPoint = path!!.first().nodeA
         assertEquals(2, startPoint)
 
         path = getPathAndStates(1, 0, edges).first
         assertNotNull(path)
-        startPoint = path!!.first().first
+        startPoint = path!!.first().nodeA
         assertEquals(1, startPoint)
     }
 
@@ -39,17 +39,17 @@ class AntAlgorithmTest : TestCase() {
     fun testEndingPoint() {
         var path = getPathAndStates(1, 0, edges).first
         assertNotNull(path)
-        var endPoint = path!!.last().second
+        var endPoint = path!!.last().nodeB
         assertEquals(0, endPoint)
 
         path = getPathAndStates(2, 3, edges).first
         assertNotNull(path)
-        endPoint = path!!.last().second
+        endPoint = path!!.last().nodeB
         assertEquals(3, endPoint)
 
         path = getPathAndStates(1, 0, edges).first
         assertNotNull(path)
-        endPoint = path!!.last().second
+        endPoint = path!!.last().nodeB
         assertEquals(0, endPoint)
     }
 
@@ -73,14 +73,14 @@ class AntAlgorithmTest : TestCase() {
             adjList[it.nodeB.toInt()][it.nodeA] = it.cost
         }
 
-        fun checkPathCorrect(path: Collection<Pair<Short, Short>>?) {
+        fun checkPathCorrect(path: Collection<Edge>?) {
             requireNotNull(path)
-            var curPos = path.first().first
+            var curPos = path.first().nodeA
             for (i in path) {
-                assert(i.first == curPos)
-                assert(i.first < adjList.size)
-                assertNotNull(adjList[i.first.toInt()][i.second])
-                curPos = i.second
+                assert(i.nodeA == curPos)
+                assert(i.nodeA < adjList.size)
+                assertNotNull(adjList[i.nodeA.toInt()][i.nodeB])
+                curPos = i.nodeB
             }
         }
 
