@@ -1,9 +1,9 @@
 package com.gvm.routebuilder
 
 import android.content.Context
-import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.AppCompatButton
 
-class TownButton : AppCompatImageButton {
+class TownButton : AppCompatButton {
     constructor(townId: Short, context: Context) : super(context) {
         this.townId = townId
     }
