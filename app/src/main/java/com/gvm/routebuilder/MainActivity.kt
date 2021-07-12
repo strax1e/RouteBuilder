@@ -167,10 +167,10 @@ class MainActivity : AppCompatActivity() {
     private val mainVM by lazy { ViewModelProvider(this).get(MainViewModel::class.java) }
 
     private val townsRoadsObserver = Observer<Pair<Map<Short, String>, Collection<Road>>> {
-        val offset = 24
+        val offset = this.mainVM.convertDpToPx(22f).toInt()
         this.mainVM.createGraph(
-            Pair(offset, offset),
-            Pair(this.imageView.width - offset, this.imageView.height - offset)
+            Pair(0, 0),
+            Pair(this.imageView.width, this.imageView.height)
         )
     }
 
