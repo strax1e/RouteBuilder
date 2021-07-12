@@ -3,12 +3,14 @@ package com.gvm.routebuilder.viewmodel
 import android.app.Application
 import android.graphics.*
 import android.util.TypedValue
+import android.view.View
 import android.widget.Button
-import android.widget.ImageButton
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.gvm.routebuilder.R
+import com.gvm.routebuilder.TownButton
+import com.gvm.routebuilder.antalgorithm.getPathAndStates
 import com.gvm.routebuilder.database.DbConnection
 import com.gvm.routebuilder.database.entities.Road
 import kotlinx.coroutines.CoroutineScope
@@ -75,10 +77,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @return a button for node
      */
     private fun createButton(
+        townId: Short,
         busyXY: MutableSet<Pair<Float, Float>>,
         minXY: Pair<Int, Int>,
         maxXY: Pair<Int, Int>
-    ): ImageButton {
+    ): TownButton {
         var coordinates: Pair<Float, Float>
         do {
             coordinates =
@@ -88,13 +91,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
         } while (busyXY.contains(coordinates))
         busyXY.add(coordinates)
-        val button = ImageButton(getApplication())
+        val button = TownButton(townId, viewModelOwner)
         button.apply {
             visibility = Button.VISIBLE
             x = coordinates.first
             y = coordinates.second
-            setBackgroundResource(R.drawable.roundedbutton)
+            setBackgroundResource(R.drawable.town_button)
         }
+        button.setOnClickListener(this.townButtonListener)
         return button
     }
 
@@ -199,7 +203,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @param[dpValue] value in dp
      * @return value in px
      */
-    fun convertDpToPx(dpValue: Float): Float {
+    private fun convertDpToPx(dpValue: Float): Float {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue, viewModelOwner.resources.displayMetrics)
     }
 
@@ -207,8 +211,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     var isStopped = true
 
-    private val ldGraph = MutableLiveData<Pair<Map<Short, ImageButton>, Bitmap>>()
-    val graph: LiveData<Pair<Map<Short, ImageButton>, Bitmap>> = this.ldGraph
+    private val townButtonListener = View.OnClickListener {
+        val pair = ldStartAndDestination
+        when {
+            (it as TownButton).isStart -> {
+                it.isStart = false
+                pair.value = Pair(0, pair.value!!.second)
+                it.setBackgroundResource(R.drawable.town_button)
+            }
+            it.isDestination -> {
+                it.isDestination = false
+                pair.value = Pair(pair.value!!.first, 0)
+                it.setBackgroundResource(R.drawable.town_button)
+            }
+            pair.value!!.first == 0.toShort() -> {
+                it.isStart = true
+                pair.value = Pair(it.townId, pair.value!!.second)
+                it.setBackgroundResource(R.drawable.start_town_button)
+            }
+            pair.value!!.second == 0.toShort() -> {
+                it.isDestination = true
+                pair.value = Pair(pair.value!!.first, it.townId)
+                it.setBackgroundResource(R.drawable.destination_town_button)
+            }
+        }
+    }
+
+    private val ldStartAndDestination = MutableLiveData(Pair<Short, Short>(0, 0))
+    val startAndDestination: LiveData<Pair<Short, Short>> = ldStartAndDestination
+
+    private val ldGraph = MutableLiveData<Pair<Map<Short, TownButton>, Bitmap>>()
+    val graph: LiveData<Pair<Map<Short, TownButton>, Bitmap>> = this.ldGraph
 
     private val ldTownsAndRoads = MutableLiveData<Pair<Map<Short, String>, Collection<Road>>>()
     val townsAndRoads: LiveData<Pair<Map<Short, String>, Collection<Road>>> = this.ldTownsAndRoads
