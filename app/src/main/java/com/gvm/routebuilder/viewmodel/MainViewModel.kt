@@ -1,10 +1,8 @@
 package com.gvm.routebuilder.viewmodel
 
 import android.app.Application
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
+import android.view.WindowInsetsAnimation
 import android.widget.Button
 import android.widget.ImageButton
 import androidx.lifecycle.AndroidViewModel
@@ -131,22 +129,69 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             Bitmap.createBitmap(maxXY.first - minXY.first, maxXY.second - minXY.second, Bitmap.Config.ARGB_8888)
         val paint = Paint()
         paint.apply {
-            color = Color.WHITE
+            color = getApplication<Application?>().getColor(R.color.gray_light)
             strokeWidth = 6f
             isAntiAlias = true
+            style = Paint.Style.STROKE
         }
 
+        val paths = ArrayList<Pair<Path, Short>>()
         townsAndRoads.value!!.second.forEach {
             val buttonA = nodes[it.nodeA]
             val buttonB = nodes[it.nodeB]
             val offset = 15f
-            Canvas(bitmap).drawLine(
-                buttonA!!.x + offset, buttonA.y + offset,
-                buttonB!!.x + offset, buttonB.y + offset,
-                paint
-            )
+
+            var coordStart = Pair(buttonA!!.x + offset, buttonA.y + offset)
+            var coordDestination = Pair(buttonB!!.x + offset, buttonB.y + offset)
+            if (coordDestination.first < coordStart.first) {
+                coordStart = coordDestination.also { coordDestination = coordStart }
+            }
+
+            val path = Path()
+            path.moveTo(coordStart.first, coordStart.second)
+            path.lineTo(coordDestination.first, coordDestination.second)
+            Canvas(bitmap).drawPath(path, paint)
+
+            paths.add(Pair(path, it.cost))
+        }
+        this.setEdgesText(paths, paint, bitmap)
+
+        return bitmap
+    }
+
+    /**
+     * Set the text for edges.
+     * @param[paths] the paths along which the text draw
+     * @param[paint] the paint used for the text
+     * @param[bitmap] the bitmap used for stored
+     * @return bitmap
+     */
+    private fun setEdgesText(paths: ArrayList<Pair<Path, Short>>, paint: Paint, bitmap: Bitmap): Bitmap {
+        paint.apply {
+            textAlign = Paint.Align.CENTER
+            textSize = 44f
+        }
+        paths.forEach {
+            setPaintAttrs(paint, Paint.Style.STROKE, Color.BLACK)
+            Canvas(bitmap).drawTextOnPath(it.second.toString(), it.first, 0f, 16f, paint)
+
+            setPaintAttrs(paint, Paint.Style.FILL, Color.WHITE)
+            Canvas(bitmap).drawTextOnPath(it.second.toString(), it.first, 0f, 16f, paint)
         }
         return bitmap
+    }
+
+    /**
+     * Set the attributes for the paint.
+     * @param[paint] the paint which is changing
+     * @param[style] style attribute
+     * @param[color] color attribute
+     * @return paint
+     */
+    private fun setPaintAttrs(paint: Paint, style: Paint.Style, color: Int): Paint {
+        paint.style = style
+        paint.color = color
+        return paint
     }
 
     var isStopped = true
