@@ -10,12 +10,12 @@ import kotlin.random.Random
 
 //constants
 private object Constants {
-    const val startingPheromones = 0.1f
+    const val startingPheromones = 0.3f
     const val pheromonesResidue = 0.64f
-    const val pheromonesInference = 1
+    const val pheromonesInference = 4
     const val distanceInfluence = 1
     const val iterationAmount = 10
-    const val antAmount = 50
+    const val antAmount = 25
     const val pheromonesDistCf = 2f
     const val antRankRaise = 0.8f
 }
