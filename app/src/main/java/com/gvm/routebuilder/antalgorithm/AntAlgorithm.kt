@@ -89,6 +89,7 @@ private fun getNextStep(
     visited: HashSet<Short>,
     adjacencyList: Array<HashMap<Short, Pair<Float, Float>>>
 ): Short? {
+    if(curPos >= adjacencyList.size) return null
     val possibleWays = getPossibleWays(adjacencyList[curPos.toInt()], visited)
     if (possibleWays.size == 0) return null
     var delimiter = 0f // sum of ant's desire to go all possible ways
@@ -254,6 +255,7 @@ private fun getBestPath(
     start: Short,
     destination: Short
 ): MutableList<Short>? {
+    if (start >= adjacencyList.size) return null
     val visited = hashSetOf(start)
     var curPos = start
     val path = mutableListOf(start)
