@@ -1,5 +1,6 @@
 package com.gvm.routebuilder
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
@@ -30,8 +31,19 @@ class MainActivity : AppCompatActivity() {
         this.mainVM.pathAndEdgesState.observe(this, this.pathAndEdgesStateObserver)
         this.mainVM.graph.observe(this, this.graphObserver)
         this.mainVM.startAndDestination.observe(this, this.startAndDestinationObserver)
+        this.mainVM.edgesToUpdate.observe(this, this.edgesUpdateObserver)
 
         this.mainVM.loadCountries() // getting countries from db
+    }
+
+    fun onClickInfoButton(view: View) {
+        val intent = Intent(this@MainActivity, InfoActivity::class.java)
+        if (this.selectCountrySpinner.selectedItem == getString(R.string.noneText)) {
+            intent.putExtra("towns", getString(R.string.noneText))
+        } else {
+            intent.putExtra("towns", this.mainVM.getJsonTowns())
+        }
+        startActivity(intent)
     }
 
     /**
@@ -60,9 +72,8 @@ class MainActivity : AppCompatActivity() {
         val states = this.mainVM.pathAndEdgesState.value!!.second
         if (0 <= --this.mainVM.indexOfStates) {
             this.imageView.setImageBitmap(states.elementAt(this.mainVM.indexOfStates))
-        } else {
-            view.isEnabled = false
         }
+        view.isEnabled = (0 != this.mainVM.indexOfStates)
         this.nextStepButton.isEnabled = true
     }
 
@@ -91,8 +102,8 @@ class MainActivity : AppCompatActivity() {
             this.mainVM.indexOfStates = 0
             this.progressBar.visibility = ProgressBar.VISIBLE
             this.mainVM.route(Pair(0, 0), Pair(this.imageView.width, this.imageView.height))
-            this.imageView.setImageBitmap(this.mainVM.graph.value!!.second)
         }
+        this.imageView.setImageBitmap(this.mainVM.edgesToUpdate.value!!)
     }
 
     /**
@@ -200,13 +211,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val countriesObserver = Observer<Map<Short, String>> {
-        if (it.isNotEmpty()){
+        if (it.isNotEmpty()) {
             this.progressBar.visibility = ProgressBar.INVISIBLE
             this.centerTextView.visibility = TextView.VISIBLE
             this.configureSpinner()
         } else {
             Toast.makeText(this, "Database is unavailable", Toast.LENGTH_LONG).show()
         }
+        this.mainVM.imageWidth = this.imageView.width
+        this.mainVM.imageHeight = this.imageView.height
     }
 
     private val startAndDestinationObserver = Observer<Pair<Short, Short>> {
@@ -222,6 +235,10 @@ class MainActivity : AppCompatActivity() {
         this.progressBar.visibility = ProgressBar.INVISIBLE
         this.nextStepButton.isEnabled = true
         this.imageView.setImageBitmap(it.second.elementAt(this.mainVM.indexOfStates))
+    }
+
+    private val edgesUpdateObserver = Observer<Bitmap> {
+        this.imageView.setImageBitmap(it)
     }
 
     private val progressBar by lazy { findViewById<ProgressBar>(R.id.progressBar) }
