@@ -8,7 +8,7 @@
     <string name="startText">Start</string>
     <string name="noneText">None</string>
     <string name="notSelectedText">Not Selected</string>
-    <string name="helpText">The starting town is a blue node, the destination is red</string>
+    <string name="helpText">You need to select a country, then select two cities: the initial one is blue,\n the final one is red. Vertices can be dragged to reposition.</string>
     <string name="listOfTownsText">List of towns:</string>
     <string name="infoText">Info</string>
 </resources>
