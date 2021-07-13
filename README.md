@@ -22,3 +22,5 @@
 ### План работы, naming convention и ТЗ представлены [здесь](https://docs.google.com/spreadsheets/d/1AwgFWDgLDrHfQzcycRXwydDjmrvT08ZzIQRBoe7vwsA/edit?usp=sharing).
 
 ### Репозиторий kotlin сервера, что используется внутри приложения для обращений к отдаленной БД, находится [здесь](https://github.com/strax1e/RouteBuilderServer).
+
+### Отчёт работы представлен [здесь](https://drive.google.com/file/d/1C4tqMr0SCNS7JOVfGie9n1YmKZ6g5Du5/view?usp=sharing).
