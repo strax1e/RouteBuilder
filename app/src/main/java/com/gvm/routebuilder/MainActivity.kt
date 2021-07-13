@@ -125,15 +125,15 @@ class MainActivity : AppCompatActivity() {
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 startButton.isEnabled = false
+                if (!mainVM.graph.value?.first.isNullOrEmpty()) {
+                    removeGraph()
+                }
                 if (spinner.selectedItem != getString(R.string.noneText)) {
                     val countryId = mainVM.getCountryId(spinner.selectedItem as String)
                     centerTextView.visibility = TextView.INVISIBLE
                     progressBar.visibility = ProgressBar.VISIBLE
                     mainVM.loadTownsAndRoads(countryId) // getting towns and roads from db
                 } else {
-                    if (!mainVM.graph.value?.first.isNullOrEmpty()) {
-                        removeGraph()
-                    }
                     centerTextView.visibility = TextView.VISIBLE
                 }
             }
@@ -203,6 +203,8 @@ class MainActivity : AppCompatActivity() {
     private val mainVM by lazy { ViewModelProvider(this).get(MainViewModel::class.java) }
 
     private val townsRoadsObserver = Observer<Pair<Map<Short, String>, Collection<Road>>> {
+        this.mainVM.imageWidth = this.imageView.width
+        this.mainVM.imageHeight = this.imageView.height
         if (it.first.isNotEmpty() && !it.second.isEmpty()) {
             this.mainVM.createGraph(
                 Pair(0, 0),
@@ -221,8 +223,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "Database is unavailable", Toast.LENGTH_LONG).show()
         }
-        this.mainVM.imageWidth = this.imageView.width
-        this.mainVM.imageHeight = this.imageView.height
     }
 
     private val startAndDestinationObserver = Observer<Pair<Short, Short>> {

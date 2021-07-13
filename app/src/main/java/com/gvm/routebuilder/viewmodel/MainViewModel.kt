@@ -223,19 +223,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchListener = View.OnTouchListener { view: View, event: MotionEvent ->
         if (event.action == MotionEvent.ACTION_MOVE) {
-            val barrier = convertDpToPx(23f)
+            val barrier = convertDpToPx(23f / 2)
             if (this.isStopped) {
-                if (event.rawX <= (this.imageWidth - barrier)) {
-                    view.x = event.rawX
+                if (barrier <= event.rawX && event.rawX <= (this.imageWidth - barrier)) {
+                    view.x = event.rawX - barrier
                 }
-                if (event.rawY <= (this.imageHeight - barrier)) {
-                    view.y = event.rawY
+                if (barrier <= event.rawY && event.rawY <= (this.imageHeight - barrier)) {
+                    view.y = event.rawY - barrier
                 }
                 val bitmap = this.painter.createRawEdges(
                     this.townsAndRoads.value!!.second,
-                    this.townButtons,
-                    this.imageWidth,
-                    this.imageHeight
+                    this.townButtons, this.imageWidth, this.imageHeight
                 )
                 this.ldEdgesToUpdate.value = bitmap
             }
