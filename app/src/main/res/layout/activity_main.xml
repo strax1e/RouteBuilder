@@ -115,6 +115,23 @@
                 android:text="@string/startText"
         />
 
+        <View
+                android:layout_width="1sp"
+                android:layout_height="match_parent"
+                android:background="@color/gray"
+        />
+
+        <Button
+                android:id="@+id/infoButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:enabled="true"
+                android:background="@color/gray"
+                android:onClick="onClickInfoButton"
+                android:text="@string/infoText"
+        />
+
     </LinearLayout>
 
 </LinearLayout>

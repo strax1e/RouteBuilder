@@ -12,6 +12,10 @@ class TownButton : AppCompatButton {
         this.townId = 0
     }
 
+    override fun performClick(): Boolean {
+        return super.performClick()
+    }
+
     var isStart = false
     var isDestination = false
     val townId: Short

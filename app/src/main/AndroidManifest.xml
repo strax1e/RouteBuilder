@@ -3,6 +3,7 @@
           package="com.gvm.routebuilder">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
@@ -10,8 +11,12 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/Theme.RouteBuilder">
-        <activity android:name=".MainActivity"
+        <activity android:name=".InfoActivity"
                   android:screenOrientation="landscape">
+        </activity>
+        <activity
+                android:name=".MainActivity"
+                android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

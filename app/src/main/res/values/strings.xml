@@ -1,11 +1,14 @@
 <resources>
     <string name="app_name">Route Builder</string>
     <string name="selectCountryButtonText">Start</string>
-    <string name="selectCountryText">Select a country.\nThen select a two towns:\nStart - blue, End - red.</string>
+    <string name="selectCountryText">Select a country,\nthen select a two towns.</string>
     <string name="prevStepText">Prev Step</string>
     <string name="nextStepText">Next Step</string>
     <string name="stopText">Stop</string>
     <string name="startText">Start</string>
     <string name="noneText">None</string>
     <string name="notSelectedText">Not Selected</string>
+    <string name="helpText">The starting town is a blue node, the destination is red</string>
+    <string name="listOfTownsText">List of towns:</string>
+    <string name="infoText">Info</string>
 </resources>
