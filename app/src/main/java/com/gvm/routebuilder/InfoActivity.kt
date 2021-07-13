@@ -6,7 +6,6 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 
@@ -55,7 +54,6 @@ class InfoActivity : AppCompatActivity() {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, spValue, this.resources.displayMetrics)
     }
 
-    private val townsTexts = ArrayList<TextView>()
     private val list by lazy { findViewById<LinearLayout>(R.id.listOfTowns) }
     private val listHeadTextView by lazy { findViewById<TextView>(R.id.listHeadTextView) }
     private val jsonMapper = jacksonObjectMapper()

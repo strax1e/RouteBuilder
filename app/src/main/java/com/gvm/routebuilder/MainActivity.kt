@@ -36,6 +36,9 @@ class MainActivity : AppCompatActivity() {
         this.mainVM.loadCountries() // getting countries from db
     }
 
+    /**
+     * This is the action that is called when the "info" button is pressed
+     */
     fun onClickInfoButton(view: View) {
         val intent = Intent(this@MainActivity, InfoActivity::class.java)
         if (this.selectCountrySpinner.selectedItem == getString(R.string.noneText)) {
